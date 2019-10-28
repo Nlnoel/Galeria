@@ -156,6 +156,8 @@ $(document).ready(function(){
 
                 if($("input#nmAlbum").val() !== ""){
 
+                    let btnThis = $(this);
+
                     $.ajax({
 
                         url: "acoes.php",
@@ -177,9 +179,10 @@ $(document).ready(function(){
                         } else{
 
                             alert("Album cadastrado com sucesso.");
+                            btnThis.closest("div.modal-footer").children("button[data-tooltip='Fechar Modal']").trigger("click");
 
                             updateTela();
-
+                            
                         }
                     }).fail(function(x, status, val){
 
