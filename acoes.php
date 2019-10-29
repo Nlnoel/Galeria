@@ -13,7 +13,10 @@
 
         $gets = array(
             "OPENGALLERY",
-            "SEPARETFILES"
+            "SEPARETFILES",
+            "LISTALBUNS",
+            "LISPHOTOGRAPHY",
+            "DOWNLOADIMG"
         );
 
         if(isset($_GET["action"]) && in_array(mb_strtoupper(trim($_GET["action"])), $gets)){
@@ -184,6 +187,120 @@
 
             }
         
+        break;
+
+        case 'LISTALBUNS':
+            
+            try {
+
+                $objConn = new Conexao();
+
+                $strSearch = "SELECT id, album,
+                            (
+                                SELECT count(*) FROM foto
+                                WHERE album = alb.id
+                            ) AS qtdFotos
+                            FROM album alb";
+
+                $stm = $objConn->run($strSearch);
+
+                if($stm && $stm->rowCount() > 0){
+
+                    $row = $stm->fetchAll();
+
+                    $ret = array("error" => false, "data" => $row);
+
+                } else{
+
+                    $ret = array("error" => true, "message" => "Error ");
+
+                }
+                
+                echo json_encode($ret);
+
+            } catch (Exception $e) {
+                
+                $ret = array("error" => true, "message" => $e->getMessage());
+
+                echo json_encode($ret);
+
+            }
+
+        break;
+
+        case 'LISPHOTOGRAPHY':
+            
+            try {
+                
+                $objConn = new Conexao();
+
+                $idFolder = $_GET["album"] ?? "";
+
+                $strSearch = "SELECT id, nome, caminho FROM foto
+                              WHERE album = ?";
+
+                $stm = $objConn->run($strSearch, [$idFolder]);
+
+                if($stm && $stm->rowCount() > 0){
+
+                    $row = $stm->fetchAll();
+                    
+                    $ret = array("error" => false, "data" => $row);
+
+                } else{
+
+                    $ret = array("error" => true, "message" => "Não há fotos cadastradas.");
+
+                }
+
+                echo json_encode($ret);
+                
+            } catch (Exception $e) {
+                
+                $ret = array("error" => true, "message" => $e->getMessage());
+                
+                echo json_encode($ret);
+
+            }
+
+        break;
+
+        case 'DELETEPHOTOGRAPHY':
+            
+            try {
+                
+                $objConn = new Conexao();
+                
+                $idPhotography = $_POST["photography"] ?? "";
+                $place         = $_POST["place"] ?? "";
+
+                Arquivo::deleteImg($place);
+
+                $strDelete = "DELETE FROM foto
+                              WHERE id = ?";
+
+                $stm = $objConn->run($strDelete, [$idPhotography]);
+
+                if($stm){
+
+                    $ret = array("error" => false);
+
+                } else{
+
+                    $ret = array("error" => true, "message" => "A imagem foi apagada, contudo ouve um erro durante a tentativa de apagar está foto do banco.");
+
+                }
+
+                echo json_encode($ret);
+                
+            } catch (Exception $e) {
+                
+                $ret = array("error" => true, "message" => $e->getMessage());
+
+                echo json_encode($ret);
+
+            }
+
         break;
         
     }

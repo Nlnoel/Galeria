@@ -109,17 +109,6 @@
 
         }
 
-        public function downloadImg($place, $type, $size, $nameImg){
-
-            header("Content-type: ".$type);
-            header("Content-Length: ". $size);
-            header("Content-Transfer-Encoding: binary");
-            header("Content-Description: File Transfer");
-            header("Content-Disposition: attachment; filename='$nameImg'");
-            readfile($place);
-
-        }
-
         public function deleteImg(string $file){
 
             unlink($file);

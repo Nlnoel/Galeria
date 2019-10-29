@@ -14,12 +14,15 @@ $(document).ready(function(){
 
         $("div#modalAddImg").children("div#photography").children("div#field-photography").remove();
         $("div#modalAddImg").children("div#photography").children("div#addNewAlbum").remove();
-        
+        $("div#modalAddImg").children("div#photography").children("ul.collapsible").remove();
+
         $("div#modalAddImg").children("div#photography").append(
             "<div class=\"modal-content center\" style=\"cursor: pointer; border: dotted lightgray; padding: 130px\" id=\"field-photography\" title=\"Adicionar foto\">"+
                 "<i class=\"material-icons grey-text lighten-3\">add_a_photo</i>"+
             "</div>"
         );//*/
+
+        $("div#modalAddImg").find("button#oneMore").show();
 
         setTimeout(() => {
 
@@ -198,62 +201,7 @@ $(document).ready(function(){
 
             } else{
 
-                if($("div#modalAddImg").children("div#photography").find("ul#list-albuns").html() !== undefined){
-
-                    $.ajax({
-
-                        url: "acoes.php",
-                        type: "GET",
-                        dataType: "json",
-
-                        data: {
-
-                            action: "ListAlbuns"
-
-                        }
-
-                    }).done(function(){
-
-                        if(val["error"]){
-
-                            alert(val["message"]);
-
-                        } else{
-
-                            
-                            let htmlList = "<ul class=\"collapsible\">";
-                            let data = val["data"];
-                            
-                            $("").html("");
-
-                            for(x in data){
-
-                                htmlList = "<li>"+
-                                                "<div class=\"collapsible-header\">"+
-                                                    "<i class=\"material-icons\">folder_open</i>"+
-                                                    "Second"+
-                                                    "<span class=\"badge\">1</span></div>"+
-                                                "<div class=\"collapsible-body\"><p>Lorem ipsum dolor sit amet.</p></div>"+
-                                            "</li>"
-
-                            }
-
-                            htmlList = "</ul>";
-
-                            $("").html(htmlList);
-
-                        }
-                    }).fail(function(x, status, val){
-
-                        alert(val);
-
-                    });
-
-                } else{
-
-                    alert("Adicione uma foto para prosseguir.");
-
-                }
+                alert("Adicione uma foto para prosseguir.");
 
             }
             
@@ -312,7 +260,8 @@ $(document).ready(function(){
 
         $("div#modalAddImg").children("div#photography").children("div#field-photography").remove();
         $("div#modalAddImg").children("div#photography").children("div#addNewAlbum").remove();
-        
+        $("div#modalAddImg").children("div#photography").children("ul.collapsible").remove();
+
         $("div#modalAddImg").children("div#photography").append(
             "<div id=\"addNewAlbum\" class=\"row\">"+
                 "<div class=\"input-field col s6\">"+
@@ -325,6 +274,8 @@ $(document).ready(function(){
                 "</div>"+
             "</div>"
         );
+
+        $("div#modalAddImg").find("button#oneMore").show();
 
         $("div#modalAddImg").find("div.modal-footer").children("button#oneMore").attr("data-tooltip", "Criar novo album.");
 
@@ -343,11 +294,187 @@ $(document).ready(function(){
 
     });
     
+    //Lista todos os albuns
     $("a#list-albuns").click(function(){
 
-        alert("clicou");
+        $.ajax({
+
+            url: "acoes.php",
+            type: "GET",
+            dataType: "json",
+
+            data: {
+
+                action: "ListAlbuns"
+
+            }
+
+        }).done(function(val){
+
+            if(val["error"]){
+
+                alert(val["message"]);
+
+            } else{
+
+                let htmlList = "<ul class=\"collapsible\">";
+                let data = val["data"];
+                
+                $("div#modalAddImg").children("div#photography").children("div#field-photography").remove();
+                $("div#modalAddImg").children("div#photography").children("div#addNewAlbum").remove();
+                $("div#modalAddImg").children("div#photography").children("ul.collapsible").remove();
+                
+                for(x in data){
+
+                    htmlList += "<li>"+
+                                    "<div class=\"collapsible-header\" id=\"open-album\" data-id=\""+ data[x]['id'] +"\">"+
+                                        "<i class=\"material-icons\">folder_open</i>"+
+                                        data[x]['album']+
+                                        "<span class=\"badge\">"+ data[x]['qtdFotos'] +"</span>"+
+                                    "</div>"+
+                                    "<div class=\"collapsible-body grey lighten-3\">"+
+                                        "<span>Oia eu aqui</span>"+
+                                    "</div>"+
+                                "</li>"
+
+                }
+
+                htmlList += "</ul>";
+
+                $("div#modalAddImg").children("div#photography").append(htmlList);
+                $(".collapsible").collapsible();
+                $("div#modalAddImg").find("button#oneMore").hide();
+
+            }
+        }).fail(function(x, status, val){
+
+            alert(val);
+
+        });
 
     });
+
+    //Lista fotos do album selecionado
+    $("div#modalAddImg").delegate("div#open-album", "click", function(){
+        
+        let btnThis = $(this);
+
+        if(btnThis.closest("li").children("div.collapsible-body").children("ul.collection").html() === undefined){
+            
+            $.ajax({
+
+                url: "acoes.php",
+                type: "GET",
+                dataType: "json",
+
+                data: {
+
+                    action: "LisPhotography",
+                    album: btnThis.attr("data-id")
+
+                },
+                beforeSend: function(){
+
+                    btnThis.closest("li").children("div.collapsible-body").html(
+
+                        "<div class=\"preloader-wrapper active\">"+
+                            "<div class=\"spinner-layer spinner-red-only\">"+
+                            "<div class=\"circle-clipper left\">"+
+                                "<div class=\"circle\"></div>"+
+                            "</div><div class=\"gap-patch\">"+
+                                "<div class=\"circle\"></div>"+
+                            "</div><div class=\"circle-clipper right\">"+
+                                "<div class=\"circle\"></div>"+
+                            "</div>"+
+                            "</div>"+
+                        "</div>"
+
+                    );
+
+                    btnThis.closest("li").children("div.collapsible-body").addClass("center");
+
+                }
+
+            }).done(function(val){
+
+                if(val["error"]){
+                    btnThis.closest("li").children("div.collapsible-body").html(val["message"]);
+
+                } else{
+
+                    let data = val["data"];
+                    let htmlPhoto = "<ul class=\"collection\">";
+
+                    for(x in data){
+
+                        htmlPhoto += "<li class=\"collection-item avatar\">"+
+                                        "<img src=\""+ data[x]['caminho'] +"\" alt=\"\" class=\"circle\">"+
+                                        "<span class=\"title\">"+ data[x]['nome'] +"</span>"+
+                                        "<div class=\"secondary-content\" style=\"font-size: 53px\">"+
+                                            "<a href=\""+ data[x]['caminho'] +"\" download=\""+ data[x]['nome'] +"\" id=\"download-photography\" title=\"Baixar Foto\">"+
+                                                "<i style=\"font-size: 40px\" class=\"material-icons\">cloud_download</i>"+
+                                            "</a>"+
+
+                                            "<i class=\"material-icons\" id=\"delete-photography\" style=\"font-size: 40px; cursor: pointer;\" data-id=\""+ data[x]['id'] +"\" title=\"Apagar Foto\">remove_circle</i>"+
+                                        "</div>"+
+                                    "</li>";
+                    }
+
+                    htmlPhoto += "</ul>";
+
+                    btnThis.closest("li").children("div.collapsible-body").removeClass("center");
+                    btnThis.closest("li").children("div.collapsible-body").html(htmlPhoto);
+
+                }
+
+            }).fail(function(x, status, val){
+                
+                btnThis.closest("li").children("div.collapsible-body").html(val);
+                
+            });
+
+        }
+
+    });
+
+    //Apaga a foto selecionada do listar
+    $("div#modalAddImg").delegate("i#delete-photography", "click",function(){
+        
+        let confirmation = confirm("Deseja realmente apagar está foto?");
+
+        if(confirmation){
+
+            let btnThis = $(this);
+
+            $.ajax({
+
+                url: "acoes.php",
+                type: "POST",
+
+                data: {
+
+                    action: "DeletePhotography",
+                    photography: btnThis.attr("data-id"),
+                    place: btnThis.closest("ul").children("li:first").children("img").attr("src")
+
+                }
+
+            }).done(function(val){
+
+                if(val["error"])
+                    alert(val["message"]);
+                else
+                    btnThis.closest("li").remove();
+
+            }).fail(function(x, status, val){
+
+                alert(val);
+
+            });
+
+        }
+
+    });//*/
 
     //Função de atualizar os carroceis
     function updateTela(){
