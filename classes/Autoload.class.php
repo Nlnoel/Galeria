@@ -13,14 +13,7 @@
 
 			$ext = spl_autoload_extensions();
 
-			switch ($className) {
-                
-				default:
-
-					require_once(__DIR__.'/'.$className.$ext);
-				break;
-			}
-
+			require_once(__DIR__.'/'.$className.$ext);
 			
 		}
 	}
